@@ -2,7 +2,6 @@
 from flask import Flask, request,send_file, render_template,jsonify,redirect, url_for
 import NLP
 import bat_file
-import os
 app = Flask(__name__)
 import re
 import getService
