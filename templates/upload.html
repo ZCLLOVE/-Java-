@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件上传</title>
+    <style>
+        .box {
+          width: 80vw; /* 固定宽度 */
+          border: 1px solid #ccc;
+          margin: 5px 2vw;
+          padding: 5px;
+          display: inline-block;
+          box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <h1>上传Excel文件</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".xls, .xlsx" required>
+        <input type="submit" value="上传">
+        <div id="container"></div>
+        {% if status == 'success' %}
+                <script>
+                    window.onload = function() {
+                        alert("上传成功");
+
+                    };
+                </script>
+            {% endif %}
+    </form>
+    <script>
+        fetch('/uploadExcel', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ })
+        })
+        .then(response => {
+            if (response.status === 200) {
+                // 请求成功
+                return response.json();
+            } else {
+                alert("字段类型不符合规范")
+                // 处理错误
+                throw new Error('请求失败');
+            }
+        })
+        .then(responseData => {
+          const excelList = JSON.parse(responseData.excelList);
+           // 遍历数组并创建相应的元素
+          excelList.forEach(item => {
+            const container = document.getElementById('container');
+             // 创建一个 div 元素
+            const box = document.createElement('div');
+            // 添加类名
+            box.className = 'box';
+            // 将文本内容设置为数组元素的值
+            box.textContent = item.文件名;
+              box.onclick = function() {
+                updateFile(item.文件名)
+                window.location.href = '/xunzhang';
+              }
+            // 将元素添加到容器中
+            container.appendChild(box);
+          });
+        })
+        .catch(error => {
+            // 处理错误
+            console.error('错误：', error);
+        });
+        function updateFile(file){
+             fetch('/xunzhang', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({'flag':'updateFile','file':file})
+        })
+        .then(response => {
+            if (response.status === 200) {
+                // 请求成功
+                return response.json();
+            } else {
+                alert("字段类型不符合规范")
+                // 处理错误
+                throw new Error('请求失败');
+            }
+        })
+        .then(responseData => {
+        })
+        .catch(error => {
+            // 处理错误
+            console.error('错误：', error);
+        });
+        }
+    </script>
+</body>
+</html>

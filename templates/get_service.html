@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Service Generator</title>
+    <style>
+        .container {
+            margin: 20px auto;
+            width: 80%;
+        }
+        input {
+            width: 60%;
+            padding: 10px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px 20px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <label for="service_name">输入 service 名：</label>
+        <input type="text" id="service_name" name="serviceName" placeholder="sysOrgPerson或者sysOrgPersonService首字母大小写均可">
+        <button onclick="generateService()">生成</button>
+        <div class="result" style="height: 10%">
+            <button >Copy code</button>
+            <p id="serviceCodeEasy"></p>
+        </div>
+        <div class="result">
+            <button >Copy code</button>
+            <p id="serviceCode"></p>
+        </div>
+    </div>
+
+    <script>
+        // 获取所有按钮元素
+var copyButtons = document.querySelectorAll(".result button");
+
+// 添加点击事件处理程序到每个按钮
+copyButtons.forEach(function(button) {
+    button.addEventListener("click", function () {
+        // 获取按钮下面的第一个 <p> 标签
+        var textToCopy = button.nextElementSibling;
+
+        // 创建一个临时文本区域元素
+        var textarea = document.createElement("textarea");
+
+        // 替换文本内容中的 &nbsp; 字符为普通空格
+        var text = textToCopy.innerText.replace(/\u00A0/g, ' ');
+
+        // 设置文本区域的值为要复制的文本内容
+        textarea.value = text;
+
+        // 将文本区域添加到文档中
+        document.body.appendChild(textarea);
+
+        // 选择文本
+        textarea.select();
+
+        // 使用 Clipboard API 执行复制操作
+        document.execCommand("copy");
+
+        // 删除文本区域
+        document.body.removeChild(textarea);
+
+    });
+});
+        function getDate(){
+            const serviceName = document.querySelector('input[name="serviceName"]').value.trim();
+            const data = { "serviceName": serviceName };
+            return data
+        }
+        function generateService() {
+        var data = getDate()
+        // 发送一个POST请求到服务器
+        fetch('/getService', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.status === 200) {
+                // 请求成功
+                return response.json();
+            } else {
+                alert("字段类型不符合规范")
+                // 处理错误
+                throw new Error('请求失败');
+            }
+        })
+        .then(responseData => {
+            // 从 responseData 中获取后端返回的值
+            const serviceCode = responseData.serviceCode;
+            const serviceCodeEasy = responseData.serviceCodeEasy;
+            setValue('serviceCode',serviceCode)
+            setValue('serviceCodeEasy',serviceCodeEasy)
+        })
+        .catch(error => {
+            // 处理错误
+            console.error('错误：', error);
+        });
+        }
+        function setValue(idName,value){
+             const javaParagraph = document.getElementById(idName);
+             // 填充p标签的内容
+            javaParagraph.innerHTML  = "<pre>"+ value + "</pre>";;
+        }
+    </script>
+</body>
+</html>

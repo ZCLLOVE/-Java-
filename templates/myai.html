@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat with Bot</title>
+    <style>
+        #chatbox {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .user-message {
+            color: blue;
+        }
+        .bot-message {
+            color: green;
+        }
+        #input-area {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #f8f8f8;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="chatbox">
+    </div>
+    <div id="input-area">
+        <input type="text" id="inputbox" placeholder="Type your message here">
+        <button id="but" onclick="sendMessage()">发送</button>
+    </div>
+
+    <script>
+        var index = 0;
+
+        function sendMessage() {
+            var but = document.getElementById("but")
+            but.disabled = true;
+            var inputbox = document.getElementById('inputbox');
+            var chatbox = document.getElementById('chatbox');
+
+            // 加如li
+            var userMessage = document.createElement('li');
+            userMessage.textContent = inputbox.value;
+            userMessage.id = 'message' + index;
+            userMessage.className = 'user-message';
+            chatbox.appendChild(userMessage);
+
+            const data = {};
+
+            for (let i = 0; ; i++) {
+              const li = document.getElementById(`message${i}`);
+              const replyli = document.getElementById(`reply${i}`);
+              if (!li) {
+                // 如果字段输入不存在，退出循环
+                break;
+              }
+              const message = li.textContent;
+              // 将字段值添加到数据对象
+              data[`message${i}`] = message;
+              if (replyli){
+                const reply = replyli.textContent;
+                data[`reply${i}`] = reply;
+              }
+            }
+            fetch('/ai', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+            if (response.status === 200) {
+                // 请求成功
+                return response.json();
+            } else {
+                but.disabled = false;
+                alert("请求失败")
+                // 处理错误
+                throw new Error('请求失败');
+            }
+        })
+            .then(data => {
+                console.log(data)
+                var botMessage = document.createElement('li');
+                botMessage.textContent = data.reply;
+                botMessage.id = 'reply' + (index);
+                botMessage.className = 'bot-message';
+                chatbox.appendChild(botMessage);
+                index++
+                chatbox.scrollTop = chatbox.scrollHeight;
+                but.disabled = false;
+            });
+
+            // Clear the input box
+            inputbox.value = '';
+        }
+
+    </script>
+</body>
+</html>

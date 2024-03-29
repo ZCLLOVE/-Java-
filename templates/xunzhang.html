@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+            font-family: Arial, sans-serif;
+        }
+        #search-container {
+            display: flex;
+            align-items: center;
+        }
+
+        #search-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px 0 0 5px;
+        }
+
+        #search-button {
+            padding: 10px;
+            background-color: #007BFF;
+            color: #fff;
+            border: 1px solid #007BFF;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+        }
+
+        #results-container {
+            width: 83vw;
+            margin-top: 10px;
+            display: none;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: #fff;
+            position: absolute;
+            z-index: 1;
+        }
+    .box {
+      width: 80vw; /* 固定宽度 */
+      border: 1px solid #ccc;
+      margin: 5px 2vw;
+      padding: 5px;
+      display: inline-block;
+      box-sizing: border-box;
+    }
+    .title{
+      border: 1px solid #ccc;
+      margin-left:  1vw ;
+      padding: 5px;
+      display: inline-block;
+      box-sizing: border-box;
+    }
+  </style>
+  <title>思维导图查看器</title>
+</head>
+<body>
+    <div id="search-container">
+        <input type="text" id="search-input" placeholder="在这里输入搜索内容">
+        <button id="search-button">搜索</button>
+    </div>
+
+    <div id="results-container"></div>
+  <div id="head"></div>
+  <div id="container"></div>
+  <script>
+    const resultsContainer = document.getElementById("results-container");
+    document.addEventListener("DOMContentLoaded", function () {
+            var searchButton = document.getElementById("search-button");
+
+            var searchInput = document.getElementById("search-input");
+            searchButton.addEventListener("click", function () {
+              resultsContainer.innerHTML=''
+               var searchTerm = searchInput.value.trim(); // 获取输入框内容
+                resultsContainer.style.display = "block";
+               fetch('/xunzhang', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({"flag":"search","key":searchTerm})
+               })
+              .then(response => {
+                  if (response.status === 200) {
+                      // 请求成功
+                      return response.json();
+                  } else {
+                      alert("字段类型不符合规范")
+                      // 处理错误
+                      throw new Error('请求失败');
+                  }
+              })
+              .then(responseData => {
+                const xunzhangContentArray = JSON.parse(responseData.xunzhangContent);
+                setSearchContent(xunzhangContentArray,searchTerm)
+              })
+              .catch(error => {
+                  // 处理错误
+                  console.error('错误：', error);
+              });
+                  });
+
+            document.addEventListener("click", function (event) {
+                var isClickInside = resultsContainer.contains(event.target) || searchButton.contains(event.target) || searchInput.contains(event.target);
+                if (!isClickInside) {
+                    resultsContainer.style.display = "none";
+                }
+            });
+    });
+
+    // 获取容器元素
+    const container = document.getElementById('container');
+    const head = document.getElementById('head');
+     fetch('/xunzhang', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({"flag":"load"})
+        })
+        .then(response => {
+            if (response.status === 200) {
+                // 请求成功
+                return response.json();
+            } else {
+                alert("字段类型不符合规范")
+                // 处理错误
+                throw new Error('请求失败');
+            }
+        })
+        .then(responseData => {
+          const xunzhangContentArray = JSON.parse(responseData.xunzhangContent);
+          const headArray = JSON.parse(responseData.head);
+           // 遍历数组并创建相应的元素
+          headArray.forEach(item => {
+              setHead(item.列索引,item.内容)
+          });
+          setContent(xunzhangContentArray)
+        })
+        .catch(error => {
+            // 处理错误
+            console.error('错误：', error);
+        });
+
+  function sendMessage(columnIndex,content){
+    fetch('/xunzhang', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({"flag":"action","columnIndex":columnIndex,"content":content})
+        })
+        .then(response => {
+            if (response.status === 200) {
+                // 请求成功
+                return response.json();
+            } else {
+                alert("字段类型不符合规范")
+                // 处理错误
+                throw new Error('请求失败');
+            }
+        })
+        .then(responseData => {
+          //清空
+          container.innerHTML = '';
+          const xunzhangContentArray = JSON.parse(responseData.xunzhangContent);
+          if (xunzhangContentArray.length>0){
+            setContent(xunzhangContentArray)
+          }
+
+        })
+        .catch(error => {
+            // 处理错误
+            console.error('错误：', error);
+        });
+  }
+  function setSearchContent(xunzhangContentArray,searchTerm){
+    // 遍历数组并创建相应的元素
+          xunzhangContentArray.forEach(item => {
+            // 创建一个 div 元素
+            const box = document.createElement('div');
+            // 添加类名
+            box.className = 'box';
+            // 将文本内容设置为数组元素的值
+              // 假设 item.内容 包含要搜索的文本
+
+
+            var itemContent = item.内容; // 替换 "item.内容" 为实际的属性或变量
+
+            // 创建一个正则表达式，使用i标志表示不区分大小写
+            var regex = new RegExp(searchTerm, "ig");
+            // 使用 replace 方法替换匹配的文本，并用 <span> 标签包裹起来，添加样式
+            var highlightedText = itemContent.replace(regex, function(match) {
+                return "<span style='color: red;'>" + match + "</span>";
+            });
+
+            box.innerHTML  = highlightedText;
+             // 使用 setAttribute 方法设置自定义属性 'columnIndex'
+            box.setAttribute('columnIndex', item.列索引);
+              box.onclick = function() {
+                container.innerHTML=''
+                // const newArray = []
+                // newArray.push(item)
+                // setContent(newArray)
+                resultsContainer.innerHTML=''
+                head.innerHTML=''
+                searchRelation(item.列索引,item.内容)
+              }
+            // 将元素添加到容器中
+            resultsContainer.appendChild(box);
+          });
+  }
+  function searchRelation(columnIndex,content){
+    fetch('/xunzhang', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({"flag":"searchRelation","columnIndex":columnIndex,"content":content})
+        })
+        .then(response => {
+            if (response.status === 200) {
+                // 请求成功
+                return response.json();
+            } else {
+                alert("字段类型不符合规范")
+                // 处理错误
+                throw new Error('请求失败');
+            }
+        })
+        .then(responseData => {
+          //清空
+          container.innerHTML = '';
+          const xunzhangContentArray = JSON.parse(responseData.xunzhangContent);
+          // 遍历数组中前 n-1 个元素
+          xunzhangContentArray.slice(0, -1).forEach((item, index) => {
+               setHead(item.列索引,item.内容)
+          });
+          // 创建一个 div 元素
+            const box = document.createElement('div');
+            // 添加类名
+            box.className = 'box';
+            // 将文本内容设置为数组元素的值
+            box.textContent = xunzhangContentArray[xunzhangContentArray.length-1].内容;
+            container.appendChild(box)
+
+        })
+        .catch(error => {
+            // 处理错误
+            console.error('错误：', error);
+        });
+  }
+  function setContent(xunzhangContentArray){
+    var flag = true
+    if (xunzhangContentArray[0].列索引=="null"){
+      flag=false
+      xunzhangContentArray.shift()
+    }
+    // 遍历数组并创建相应的元素
+          xunzhangContentArray.forEach(item => {
+            // 创建一个 div 元素
+            const box = document.createElement('div');
+            // 添加类名
+            box.className = 'box';
+            // 将文本内容设置为数组元素的值
+            box.textContent = item.内容;
+             // 使用 setAttribute 方法设置自定义属性 'columnIndex'
+            box.setAttribute('columnIndex', item.列索引);
+            if (flag){
+              box.onclick = function() {
+                sendMessage(item.列索引, item.内容);
+                setHead(item.列索引, item.内容)
+              }
+            }
+
+            // 将元素添加到容器中
+            container.appendChild(box);
+          });
+  }
+  function setHead(colValue, content){
+     // 创建一个 div 元素
+            const box = document.createElement('div');
+            // 添加类名
+            box.className = 'title';
+            // 将文本内容设置为数组元素的值
+            box.textContent = content;
+             // 使用 setAttribute 方法设置自定义属性 'columnIndex'
+            box.setAttribute('columnIndex', colValue);
+             box.onclick = function() {
+                sendMessage(colValue, content);
+                deleteRightDivs(box)
+            }
+            // 将元素添加到容器中
+            head.appendChild(box);
+  }
+  function deleteRightDivs(clickedBox) {
+        var boxes = Array.from(head.children);
+        var index = boxes.indexOf(clickedBox);
+
+        // Remove right divs
+        for (var i = index + 1; i < boxes.length; i++) {
+            head.removeChild(boxes[i]);
+        }
+    }
+  </script>
+</body>
+</html>

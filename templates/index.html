@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>String Concatenation</title>
+       <style>
+ /* 设置整体布局为 flex */
+body {
+    align-items: center; /* 水平居中对齐 */
+}
+.from{
+    width: 31%;
+    float: left;
+    padding: 10px;
+}
+.result-item{
+    width: 31%;
+    height: 290px;
+    padding: 10px;
+    float: left;
+    border: 1px solid #ccc;
+    overflow: auto; /* 当内容溢出时显示滚动条 */
+     white-space: nowrap; /* 防止文本折行 */
+}
+/* 选择所有<span>标签 */
+span {
+    /* 设置字体颜色为蓝色 */
+    color: blue;
+    /* 设置字体大小为16像素 */
+    font-size: 16px;
+    /* 设置字体加粗 */
+    font-weight: bold;
+    /* 设置内边距（上、右、下、左）为5像素 */
+    padding: 5px;
+}
+/* 选择所有<button>标签 */
+button {
+    float: left;
+    font-size: 16px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+  table {
+        border-collapse: collapse;
+        width: 100%;
+        border: 1px solid #ddd;
+    }
+
+    table, th, td {
+        border: 1px solid #ddd;
+    }
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    box-sizing: border-box; /* 使用border-box盒子模型 */
+}
+
+    input[type="text"] {
+        border: none;
+        border-bottom: 1px solid #000;
+        padding: 5px;
+        margin: 5px 0;
+        width: 90%;
+    }
+
+    input[type="submit"] {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+    }
+ #myDropdown {
+      display: none;
+      position: absolute;
+      background-color: #f1f1f1;
+      min-width: 160px;
+      box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+      padding: 12px 16px;
+     margin-left: 70px;
+      z-index: 1;
+    }
+
+    #myDropdown:hover {
+      background-color: #ddd;
+    }
+    </style>
+</head>
+<body>
+  <div class="from">
+
+    <form method="POST" action="/">
+        <table>
+            <tr>
+                <div> src路径：<span style="color: red;">*</span><input placeholder="D:\workspase\DWZQ2023" type="text" name="fileAddr" id="fileAddr"  style="width: 70%">
+                <div id="myDropdown">D:\workspase\DWZQ2023</div></div>
+                <td colspan="2">modelName<span style="color: red;">*</span></td>
+                <td colspan="2"><input placeholder="FsscExpenseMain" type="text" name="modelName"  required></td>
+            </tr>
+            <tr>
+                <td>字段名 <span style="color: red;">*</span></td>
+                <td style="width: 40%;">字段类型<span style="color: red;">*</span></td>
+                 <td style="width: 18%">中文<span style="color: red;">*</span></td>
+                 <td style="width: 15%">长度</td>
+            </tr>
+            <tr>
+                <td><input placeholder="fdVisitorUnit" type="text" name="field0"  required></td>
+                <td>
+                    <input placeholder="List<SysOrgElement>" style="width: 90%"  type="text" name="filedType0" required>
+                      <select style="width: 80%;float: right" id="filedTypeSelect" onchange="updateFieldType(this)">
+                        <option value="">请选择</option>
+                        <option value="String">String</option>
+                        <option value="Boolean">Boolean</option>
+                        <option value="Integer">Integer</option>
+                        <option value="Double">Double</option>
+                        <option value="Date">Date</option>
+                    </select>
+                </td>
+                <td><input type="text" name="chineseMean0"  required></td>
+                <td><input type="text" name="length0" ></td>
+            </tr>
+        </table>
+        <br><br>
+    </form>
+        <button type="button" onclick="submitForm()">生成</button>
+        <button type="button" onclick="addTableRow()">新增行</button>
+        <button type="button" onclick="deleteTableRow()">删除末尾行</button>
+        <button id="jsonBat">Down bat</button>
+        <button><a href="/getService">更多功能</a></button>
+</div>
+      <div class="result-item">
+          <span>java文件</span>
+          <button >Copy code</button>
+        <p id="java"></p>
+      </div>
+    <div class="result-item">
+        <span>hbm文件</span>
+        <button >Copy code</button>
+        <p id="xml"></p>
+    </div>
+    <div class="result-item">
+        <span>form文件</span>
+        <button >Copy code</button>
+        <p id="form"></p>
+    </div>
+    <div class="result-item">
+        <span>properties文件</span>
+        <button >Copy code</button>
+        <p id="properties"></p>
+    </div>
+    <div class="result-item">
+        <span>json文件</span>
+        <button >Copy code</button>
+        <p id="json"></p>
+    </div>
+</body>
+<script>
+    function getDate(){
+                // 获取输入字段的值
+        const modelName = document.querySelector('input[name="modelName"]').value.trim();
+        const data = { "modelName": modelName };
+
+        for (let i = 0; ; i++) {
+          const fieldInput = document.querySelector(`input[name="field${i}"]`);
+
+          if (!fieldInput) {
+            // 如果字段输入不存在，退出循环
+            break;
+          }
+
+          const field = fieldInput.value.trim();
+          const fieldType = document.querySelector(`input[name="filedType${i}"]`).value.trim();
+          const chineseMean = document.querySelector(`input[name="chineseMean${i}"]`).value.trim();
+          const length = document.querySelector(`input[name="length${i}"]`).value.trim();
+            if (field === '' || fieldType === '' || chineseMean === '') {
+                alert('请填写带*字段'); // 如果有任一字段为空，弹出警告框提示用户填写所有字段
+                throw new Error('错误：字段不能为空');
+            }
+          // 将字段值添加到数据对象
+          data[`field${i}`] = field;
+          data[`filedType${i}`] = fieldType;
+          data[`chineseMean${i}`] = chineseMean;
+          data[`length${i}`] = length;
+        }
+        return data
+    }
+     function submitForm() {
+         var data = getDate()
+        // 发送一个POST请求到服务器
+        fetch('/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.status === 200) {
+                // 请求成功
+                return response.json();
+            } else {
+                alert("字段类型不符合规范")
+                // 处理错误
+                throw new Error('请求失败');
+            }
+        })
+        .then(responseData => {
+            // 从 responseData 中获取后端返回的值
+            const java = responseData.getMethod;
+            const hbmxml = responseData.hbmxml;
+            const formMethod = responseData.formMethod;
+            const properties = responseData.properties;
+            const json = responseData.json;
+            setValue('java',java)
+            setValue('xml',hbmxml)
+            setValue('form',formMethod)
+            setValue('properties',properties)
+            setValue('json',json)
+        })
+        .catch(error => {
+            // 处理错误
+            console.error('错误：', error);
+        });
+    }
+    function deleteTableRow() {
+      const table = document.querySelector('table');
+      const rowCount = table.rows.length;
+
+      if (rowCount > 3) { // 至少保留2行（包括标题行）
+        table.deleteRow(rowCount - 1); // 删除最后一行
+        rowIndex--;
+      }
+    }
+
+    function setValue(idName,value){
+         const javaParagraph = document.getElementById(idName);
+         // 填充p标签的内容
+        javaParagraph.innerHTML  = "<pre>"+ value + "</pre>";;
+    }
+
+    var table = document.querySelector('table');
+    var rowIndex = 1; // 用于给新增行的name字段添加索引
+   function addTableRow() {
+        var lastRow = table.rows[table.rows.length - 1];
+        var newRow = lastRow.cloneNode(true);
+
+        // 为新增行的name字段添加索引
+        var inputs = newRow.getElementsByTagName('input');
+        for (var i = 0; i < inputs.length; i++) {
+            inputs[i].name = inputs[i].name.replace(/\d+/, rowIndex);
+            inputs[i].value = ''
+        }
+
+        // 清除下拉框的选择
+        var selects = newRow.getElementsByTagName('select');
+        for (var j = 0; j < selects.length; j++) {
+            selects[j].selectedIndex = 0;
+        }
+        // 添加新行
+        table.appendChild(newRow);
+        rowIndex++;
+    }
+ function updateFieldType(selectElement) {
+    // 获取同一行上一个输入框
+        var filedTypeInput = selectElement.previousElementSibling;
+        if (filedTypeInput && filedTypeInput.tagName === 'INPUT') {
+            filedTypeInput.value = selectElement.value;
+        }
+    }
+// 获取所有按钮元素
+var copyButtons = document.querySelectorAll(".result-item button");
+
+// 添加点击事件处理程序到每个按钮
+copyButtons.forEach(function(button) {
+    button.addEventListener("click", function () {
+        // 获取按钮下面的第一个 <p> 标签
+        var textToCopy = button.nextElementSibling;
+
+        // 创建一个临时文本区域元素
+        var textarea = document.createElement("textarea");
+
+        // 替换文本内容中的 &nbsp; 字符为普通空格
+        var text = textToCopy.innerText.replace(/\u00A0/g, ' ');
+
+        // 设置文本区域的值为要复制的文本内容
+        textarea.value = text;
+
+        // 将文本区域添加到文档中
+        document.body.appendChild(textarea);
+
+        // 选择文本
+        textarea.select();
+
+        // 使用 Clipboard API 执行复制操作
+        document.execCommand("copy");
+
+        // 删除文本区域
+        document.body.removeChild(textarea);
+
+    });
+});
+
+
+// 假设你有一个函数来准备并发送POST请求
+function sendPostRequest(data) {
+    fetch('/bat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+      .then(response => {
+        if (response.ok) {
+            return response.blob();
+        } else {
+            throw new Error('网络请求失败，请重试。');
+        }
+    })
+    .then(blob => {
+        // 创建一个a标签，模拟用户点击下载链接
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'script.bat';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+    })
+    .catch(error => {
+         alert('请求的参数格式不对吧！');
+         throw new Error('错误：字段不能为空');
+    });
+}
+
+
+const downloadButton = document.getElementById('jsonBat');
+
+// 当按钮被点击时，准备数据并发送POST请求
+downloadButton.addEventListener('click', () => {
+       const data = getDate()
+       const fileAddr = document.getElementById('fileAddr').value.trim();
+       if (fileAddr === '') {
+              alert('文件路径填一下！');
+              throw new Error('错误：字段不能为空');
+        }
+       data[`addr`] = fileAddr+"\\src";
+       sendPostRequest(data);
+});
+
+const input = document.getElementById('fileAddr');
+    const dropdown = document.getElementById('myDropdown');
+
+     input.addEventListener('focus', function () {
+      dropdown.style.display = 'block';
+    });
+
+    dropdown.addEventListener('click', function () {
+      input.value = dropdown.textContent;
+      dropdown.style.display = 'none';
+    });
+
+    document.addEventListener('click', function (event) {
+      // 检查触发事件的元素是否是输入框或下拉框
+      if (event.target !== input && event.target !== dropdown) {
+        dropdown.style.display = 'none';
+      }
+    });
+</script>
+</html>
