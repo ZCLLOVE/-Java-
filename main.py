@@ -97,7 +97,7 @@ def down_bat():
             filedTypes.append(filedType)
             chineseMeans.append(chineseMean)
             hbmxml += NLP.getHbmXml(field, length, filedType,modelName)
-            properties += NLP.getPropertiesMessage(modelName, field, chineseMean)
+            properties += NLP.getPropertiesUnicode(modelName, field, chineseMean)
             json += NLP.getJson(field, length, filedType, modelName)
             index += 1  # 增加索引，处理下一个字段
 
